@@ -94,9 +94,28 @@ def quote_options(quotation) -> list[dict]:
 	from bwh_shipping.bwh_shipping.pricing import quote_services
 	from bwh_shipping.bwh_shipping.utils import get_address_payload
 
+	# `address_name` and `company` let a provider find the address the shopper picked a location on and the
+	# company whose Item Default warehouses ship the cart; `cart_items` are the lines it splits by warehouse. They
+	# travel in the destination, not in the parcel: a carrier that reads parcel items (AfterShip) is unaffected.
+	unit_weights = get_item_unit_weights(quotation)
+	destination = {
+		**get_address_payload(quotation.shipping_address_name),
+		"address_name": quotation.shipping_address_name,
+		"company": quotation.company,
+		"cart_items": [
+			{
+				"sku": item.item_code,
+				"description": item.item_name,
+				"quantity": flt(item.qty),
+				"rate": flt(item.rate),
+				"weight": unit_weights[item.item_code],
+			}
+			for item in quotation.items
+		],
+	}
 	return quote_services(
 		None,
-		get_address_payload(quotation.shipping_address_name),
+		destination,
 		get_cart_parcels(quotation),
 		get_cart_context(quotation),
 		cod=False,
@@ -115,14 +134,14 @@ def get_cart_context(quotation) -> dict:
 	}
 
 
-def get_cart_weight(quotation) -> float:
-	"""Total cart weight in kg, from each item's own weight where ERPNext knows it.
+def get_item_unit_weights(quotation) -> dict[str, float]:
+	"""Each cart item's unit weight in kg, from ERPNext where it knows it and the default otherwise.
 
 	One query, not a get_doc per line: this runs on every checkout render.
 	"""
 	item_codes = list({item.item_code for item in quotation.items})
 	if not item_codes:
-		return 0.0
+		return {}
 
 	weights = frappe.get_all(
 		"Item",
@@ -131,11 +150,23 @@ def get_cart_weight(quotation) -> float:
 	)
 	weight_by_item = {row.name: row for row in weights}
 
+	unit_weights = {}
+	for item_code in item_codes:
+		row = weight_by_item.get(item_code)
+		unit_weight = to_kg(row) if row else 0.0
+		unit_weights[item_code] = unit_weight or DEFAULT_ITEM_WEIGHT_KG
+	return unit_weights
+
+
+def get_cart_weight(quotation) -> float:
+	"""Total cart weight in kg, from each item's own weight where ERPNext knows it."""
+	unit_weights = get_item_unit_weights(quotation)
+	if not unit_weights:
+		return 0.0
+
 	total = 0.0
 	for item in quotation.items:
-		row = weight_by_item.get(item.item_code)
-		unit_weight = to_kg(row) if row else 0.0
-		total += abs(flt(item.qty)) * (unit_weight or DEFAULT_ITEM_WEIGHT_KG)
+		total += abs(flt(item.qty)) * unit_weights[item.item_code]
 	return flt(total, 3)
 
 

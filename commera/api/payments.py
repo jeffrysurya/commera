@@ -814,6 +814,7 @@ def add_party_address(party_name, address: dict, address_type: str):
 		"phone": address.get("phone_number"),
 		"email_id": address.get("email"),
 	}
+	values.update(get_extension_address_values(address))
 	# A Continue retried after a dropped response must not file the same address twice.
 	if existing_address := get_party_address(party_name, values):
 		return frappe.get_doc("Address", existing_address)
@@ -825,6 +826,16 @@ def add_party_address(party_name, address: dict, address_type: str):
 	address_doc.append("links", {"link_doctype": "Customer", "link_name": party_name})
 	address_doc.insert(ignore_permissions=True)
 	return address_doc
+
+
+def get_extension_address_values(address: dict) -> dict:
+	"""Extra Address fields other apps declare via the `commera_address_fields` hook; empty when none do."""
+	meta = frappe.get_meta("Address")
+	return {
+		fieldname: address.get(fieldname) or None
+		for fieldname in frappe.get_hooks("commera_address_fields")
+		if meta.has_field(fieldname)
+	}
 
 
 def get_party_address(party_name: str, values: dict) -> str | None:

@@ -22,14 +22,16 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ favicon }}">
 
     {# A theme's own tokens must not redefine the --ls-* variables the merchant's colour pickers drive. #}
-    {{ format_theme_css()|safe }}
+    {{ format_theme_css()|safe }}{% for href in commera_web_include_css or [] %}{{ include_style(href) }}
+    {% endfor %}
 
     <script src="{{ shop_theme_asset_url('scripts/vendor/alpinejs/plugins/persist.js') }}"></script>
     <script src="{{ shop_theme_asset_url('scripts/vendor/alpinejs/plugins/collapse.js') }}"></script>
 
     {% block alpine_plugins %}{% endblock %}
 
-    <script defer src="{{ shop_theme_asset_url('scripts/vendor/alpinejs/core.js') }}"></script>
+    {% for src in commera_web_include_js or [] %}{{ include_script(src) }}
+    {% endfor %}<script defer src="{{ shop_theme_asset_url('scripts/vendor/alpinejs/core.js') }}"></script>
     {% block head %}{% endblock %}
 </head>
 

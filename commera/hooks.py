@@ -153,6 +153,7 @@ doc_events = {
 	},
 	"Sales Invoice": {"on_submit": "commera.utils.update_so_status_from_related_doc"},
 	"Delivery Note": {
+		"before_submit": "commera.utils.require_packing_slip_for_ecommerce_delivery",
 		"after_insert": "commera.utils.update_so_status_from_related_doc",
 		"on_submit": "commera.utils.update_so_status_from_related_doc",
 		"on_cancel": "commera.utils.update_so_status_from_related_doc",

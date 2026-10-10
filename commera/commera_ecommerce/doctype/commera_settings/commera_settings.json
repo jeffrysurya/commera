@@ -28,6 +28,7 @@
   "delivery_section",
   "shipping_rule",
   "store_pickup_enabled",
+  "require_packing_slip_for_ecommerce_delivery",
   "reason_for_return",
   "column_break_pkyw",
   "return_period",
@@ -194,6 +195,13 @@
    "fieldname": "store_pickup_enabled",
    "fieldtype": "Check",
    "label": "Store Pickup"
+  },
+  {
+   "default": "0",
+   "description": "Blocks submitting a Delivery Note for a storefront order until a submitted Packing Slip exists for it.",
+   "fieldname": "require_packing_slip_for_ecommerce_delivery",
+   "fieldtype": "Check",
+   "label": "Require Packing Slip Before Delivery"
   },
   {
    "fieldname": "cod_section",

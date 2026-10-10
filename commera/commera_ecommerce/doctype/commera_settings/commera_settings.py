@@ -94,6 +94,7 @@ class CommeraSettings(Document):
 		product_list_og_image: DF.AttachImage | None
 		products_per_page: DF.Literal["12", "24", "48"]
 		reason_for_return: DF.Table[ReturnReason]
+		require_packing_slip_for_ecommerce_delivery: DF.Check
 		return_period: DF.Int
 		sale_price_list: DF.Link | None
 		search_content_fields: DF.Table[SearchContentField]
