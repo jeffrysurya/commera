@@ -6,6 +6,7 @@ import frappe
 from erpnext.selling.doctype.customer.customer import (
 	get_nested_links as _get_nested_links,
 )
+from frappe import _
 from frappe.geo.country_info import get_all
 from frappe.query_builder import Case, DocType
 from frappe.query_builder.functions import Count, Min, Sum
@@ -751,6 +752,26 @@ def get_pos_reserved_qtys(item_codes, warehouse):
 		reserved_by_item_code.update({cstr(row.item_code): flt(row.stock_qty) for row in rows})
 
 	return reserved_by_item_code
+
+
+def require_packing_slip_for_ecommerce_delivery(doc, method=None):
+	"""ERPNext only checks packed quantities once a submitted Packing Slip exists, so a Delivery Note with
+	none sails through. Storefront orders are the ones with a payment mode; desk-made orders have none."""
+	setting = "require_packing_slip_for_ecommerce_delivery"
+	if doc.is_return or not cint(frappe.get_cached_value("Commera Settings", "Commera Settings", setting)):
+		return
+
+	sales_orders = {d.against_sales_order for d in doc.items if d.against_sales_order}
+	if not sales_orders or not frappe.db.exists(
+		"Sales Order", {"name": ["in", list(sales_orders)], "custom_ecommerce_payment_mode": ["is", "set"]}
+	):
+		return
+
+	if not frappe.db.exists("Packing Slip", {"delivery_note": doc.name, "docstatus": 1}):
+		frappe.throw(
+			_("A submitted Packing Slip is required before submitting Delivery Note {0}.").format(doc.name),
+			title=_("Packing Slip Required"),
+		)
 
 
 def update_so_status_from_related_doc(doc, method):

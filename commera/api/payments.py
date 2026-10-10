@@ -871,20 +871,19 @@ def add_shipping_address(party_name, address):
 
 
 def add_party_address(party_name, address: dict, address_type: str):
-	return add_customer_address(
-		party_name,
-		{
-			"address_type": address_type,
-			"city": address.get("city"),
-			"country": address.get("country"),
-			"state": address.get("state"),
-			"address_line1": address.get("full_address"),
-			"address_line2": address.get("landmark"),
-			"pincode": address.get("po_box"),
-			"phone": address.get("phone_number"),
-			"email_id": address.get("email"),
-		},
-	)
+	values = {
+		"address_type": address_type,
+		"city": address.get("city"),
+		"country": address.get("country"),
+		"state": address.get("state"),
+		"address_line1": address.get("full_address"),
+		"address_line2": address.get("landmark"),
+		"pincode": address.get("po_box"),
+		"phone": address.get("phone_number"),
+		"email_id": address.get("email"),
+	}
+	values.update(get_extension_address_values(address))
+	return add_customer_address(party_name, values)
 
 
 def add_customer_address(party_name, values: dict):
@@ -906,6 +905,16 @@ def add_customer_address(party_name, values: dict):
 	address_doc.append("links", {"link_doctype": "Customer", "link_name": party_name})
 	address_doc.insert(ignore_permissions=True)
 	return address_doc
+
+
+def get_extension_address_values(address: dict) -> dict:
+	"""Extra Address fields other apps declare via the `commera_address_fields` hook; empty when none do."""
+	meta = frappe.get_meta("Address")
+	return {
+		fieldname: address.get(fieldname) or None
+		for fieldname in frappe.get_hooks("commera_address_fields")
+		if meta.has_field(fieldname)
+	}
 
 
 def get_party_address(party_name: str, values: dict) -> str | None:

@@ -196,6 +196,7 @@ doc_events = {
 	"Delivery Note": {
 		"before_validate": "commera.discounts.pricing.remove_code_discounts",
 		"validate": "commera.discounts.pricing.apply_code_discounts",
+		"before_submit": "commera.utils.require_packing_slip_for_ecommerce_delivery",
 		"after_insert": "commera.utils.update_so_status_from_related_doc",
 		"on_submit": "commera.utils.update_so_status_from_related_doc",
 		"on_cancel": "commera.utils.update_so_status_from_related_doc",
