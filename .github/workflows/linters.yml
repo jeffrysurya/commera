@@ -3,6 +3,7 @@ name: Linters
 
 on:
   pull_request:
+  merge_group:
   workflow_dispatch:
 
 permissions:
@@ -31,7 +32,6 @@ jobs:
   linter:
     name: 'Semgrep Rules'
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     steps:
       - uses: actions/checkout@v7
@@ -51,7 +51,6 @@ jobs:
   precommit:
     name: 'Pre-Commit'
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     steps:
       - uses: actions/checkout@v7
@@ -64,7 +63,6 @@ jobs:
   npm-audit:
     name: 'Vulnerable Dependency Check'
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     steps:
       - uses: actions/checkout@v7
@@ -84,7 +82,6 @@ jobs:
   duplication:
     name: 'Code Duplication'
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     steps:
       - uses: actions/checkout@v7
@@ -105,7 +102,6 @@ jobs:
   dashboard-build:
     name: 'Dashboard Build'
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     steps:
       - uses: actions/checkout@v7
