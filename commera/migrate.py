@@ -64,6 +64,7 @@ def after_migrate():
 	setup_robots_txt()
 	seed_llms_txt()
 	seed_default_routes()
+	assign_default_email_templates()
 	validate_plugins()
 	print_plugin_problems()
 
@@ -210,7 +211,7 @@ You can track your order status at: {{ login_url }}
 
 Best regards,
 {{ company }}""",
-			"doctype": "Sales Order",
+			"reference_doctype": "Sales Order",
 		},
 		{
 			"name": "Item In Stock",
@@ -223,7 +224,7 @@ You can purchase it now at: {{ item_url }}
 
 Best regards,
 {{ company }}""",
-			"doctype": "Item",
+			"reference_doctype": "Item",
 		},
 		{
 			"name": "Order Cancellation",
@@ -236,7 +237,7 @@ If you have any questions, please contact our customer service.
 
 Best regards,
 {{ company }}""",
-			"doctype": "Sales Order",
+			"reference_doctype": "Sales Order",
 		},
 	]
 

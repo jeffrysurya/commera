@@ -188,7 +188,7 @@
    "fieldname": "shipping_rule",
    "fieldtype": "Link",
    "label": "Shipping Rule",
-   "link_filters": "[[\"Shipping Rule\",\"calculate_based_on\",\"=\",\"Net Total\"],[\"Shipping Rule\",\"disabled\",\"=\",0]]",
+   "link_filters": "[[\"Shipping Rule\",\"disabled\",\"=\",0]]",
    "options": "Shipping Rule"
   },
   {
