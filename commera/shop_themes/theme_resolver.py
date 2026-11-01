@@ -264,10 +264,6 @@ def build_base_context(match):
 
 	apply_website_settings(context)
 	apply_website_context_hooks(context)
-	# Rendered by the theme base templates. Not Frappe's web_include_*: frappe declares
-	# web_include_js itself, so using it would change every page; these render nothing unless an app opts in.
-	context.commera_web_include_js = frappe.get_hooks("commera_web_include_js") or []
-	context.commera_web_include_css = frappe.get_hooks("commera_web_include_css") or []
 
 	return context
 
