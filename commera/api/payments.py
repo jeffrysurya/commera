@@ -51,7 +51,7 @@ from commera.guest import (
 	validate_guest_checkout_enabled,
 )
 from commera.order_access import get_order_link, set_order_access_key
-from commera.plugin_events import fire_event
+from commera.plugin_events import fire_event, get_plugin_fieldnames
 from commera.utils import (
 	get_charge_account_head,
 	get_pickup_addresses,
@@ -882,7 +882,7 @@ def add_party_address(party_name, address: dict, address_type: str):
 		"phone": address.get("phone_number"),
 		"email_id": address.get("email"),
 	}
-	values.update(get_extension_address_values(address))
+	values.update(get_plugin_address_values(address))
 	return add_customer_address(party_name, values)
 
 
@@ -907,13 +907,14 @@ def add_customer_address(party_name, values: dict):
 	return address_doc
 
 
-def get_extension_address_values(address: dict) -> dict:
-	"""Extra Address fields other apps declare via the `commera_address_fields` hook; empty when none do."""
-	meta = frappe.get_meta("Address")
+def get_plugin_address_values(address: dict) -> dict:
+	"""The Address fields an installed Commera plugin owns (`<app>_...`) that the checkout form sent.
+
+	A field the form did not send is left out, so it neither blanks the field nor joins the dedupe."""
 	return {
 		fieldname: address.get(fieldname) or None
-		for fieldname in frappe.get_hooks("commera_address_fields")
-		if meta.has_field(fieldname)
+		for fieldname in get_plugin_fieldnames("Address")
+		if fieldname in address
 	}
 
 
