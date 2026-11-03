@@ -228,9 +228,16 @@
 						if (!await this.$store.cart.validate_stock_before_checkout(items)) return;
 						if (!await this.$store.cart.flush_sync()) return;
 
-						await frappe_call("/api/v2/method/commera.api.payments.generate_quotation_for_cart", {
-							cart: { items: items },
-						});
+						try {
+							await frappe_call("/api/v2/method/commera.api.payments.generate_quotation_for_cart", {
+								cart: { items: items },
+							});
+						} catch (error) {
+							if (error.type !== "CheckoutInProgressError") throw error;
+							const { data: payment_url } = await frappe_call("/api/v2/method/commera.api.payments.get_pending_payment_url", {});
+							if (payment_url) window.location.href = payment_url;
+							return;
+						}
 						window.location.href = "/{{ language }}/cart/checkout" + window.location.search;
 					} finally {
 						this.checkout_loading = false;
