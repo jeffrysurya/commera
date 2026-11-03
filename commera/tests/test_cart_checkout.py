@@ -12,10 +12,12 @@ from commera.api.cart import get_detail_for_cart_items, get_stock_shortfalls, va
 from commera.api.checkout import apply_shipping_rule
 from commera.api.payments import (
 	COD_PAYMENT_MODE,
+	CheckoutInProgressError,
 	CheckoutPriceChangedError,
 	confirm_payment,
 	generate_quotation_for_cart,
 	get_cod_total_key,
+	get_pending_payment_url,
 	initiate_checkout_with_mode,
 	save_cart_quotation,
 	update_delivery_charges,
@@ -634,6 +636,24 @@ class TestCartCheckout(IntegrationTestCase):
 			"Gateway Payment Request", filters={"name": ("in", double_click)}, pluck="status"
 		)
 		self.assertEqual(statuses, ["Cancelled", "Cancelled"])
+
+	def test_a_cart_in_checkout_points_the_shopper_back_to_its_payment(self):
+		frappe.set_user(self.shopper)
+		quotation = generate_quotation_for_cart({"items": [self.cart_line(self.discounted_item, 1)]})
+		pending_request = self.create_payment_request(quotation.name, "Pending")
+		frappe.db.set_value("Gateway Payment Request", pending_request, "order_url", "https://pay.example/session")
+
+		with (
+			patch(
+				"bwh_payments.bwh_payments.doctype.gateway_payment_request.gateway_payment_request"
+				".GatewayPaymentRequest.release_if_unpaid",
+				return_value=False,
+			),
+			self.assertRaises(CheckoutInProgressError),
+		):
+			generate_quotation_for_cart({"items": [self.cart_line(self.discounted_item, 1)]})
+
+		self.assertEqual(get_pending_payment_url(), "https://pay.example/session")
 
 	# -- stock ------------------------------------------------------------------------------------
 

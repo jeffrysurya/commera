@@ -63,6 +63,10 @@ class CheckoutPriceChangedError(frappe.ValidationError):
 	pass
 
 
+class CheckoutInProgressError(frappe.ValidationError):
+	pass
+
+
 COD_TOTAL_TTL_SECONDS = 24 * 60 * 60
 ADDRESS_TYPES = ("Billing", "Shipping")
 
@@ -119,6 +123,7 @@ def validate_cart_is_not_in_checkout(quotation_name: str):
 				"A payment is already in progress for this order. Finish or cancel it before changing your cart."
 			),
 			title=_("Checkout In Progress"),
+			exc=CheckoutInProgressError,
 		)
 
 
@@ -486,6 +491,16 @@ def generate_quotation_for_cart(cart: dict):
 	quotation = _get_cart_quotation()
 	validate_cart_is_not_in_checkout(quotation.name)
 	return get_quotation_for_cart(cart, quotation)
+
+
+@frappe.whitelist(methods=["POST"])
+def get_pending_payment_url() -> str | None:
+	"""The gateway page of the shopper's unfinished payment, so the cart can send them back to finish it."""
+	return frappe.db.get_value(
+		"Gateway Payment Request",
+		{"ref_doctype": "Quotation", "ref_docname": _get_cart_quotation().name, "status": "Pending"},
+		"order_url",
+	)
 
 
 def get_checkout_cart(cart: dict) -> dict:
